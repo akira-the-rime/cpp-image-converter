@@ -1,5 +1,6 @@
 #include <array>
 #include <fstream>
+#include <iostream>
 #include <string_view>
 
 #include "ppm_image.h"
@@ -34,6 +35,11 @@ namespace img_lib {
 
     Image LoadPPM(const Path& file) {
         std::ifstream ifs(file, std::ios::binary);
+        if (!ifs) {
+            std::cerr << "Input file was not opened" << std::endl;
+            return {};
+        }
+
         std::string sign;
         int w, h, color_max;
 

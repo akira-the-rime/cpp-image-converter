@@ -9,6 +9,7 @@
 #include "pack_defines.h"
 
 namespace img_lib {
+    using namespace std::literals;
 
 PACKED_STRUCT_BEGIN BitmapFileHeader {
     std::array<char, 2> sign = { 'B', 'M' };
@@ -60,7 +61,7 @@ bool SaveBMP(const Path& file, const Image& image) {
     out.write(reinterpret_cast<const char*>(&bitmap_file_header), sizeof(bitmap_file_header));
     out.write(reinterpret_cast<const char*>(&bitmap_info_header), sizeof(bitmap_info_header));
 
-    std::vector<char> buff(step, 0x00000000);
+    std::vector<char> buff(step, 0);
 
     for (int y = h - 1; y >= 0; --y) {
         const Color* line = image.GetLine(y);
@@ -77,6 +78,8 @@ bool SaveBMP(const Path& file, const Image& image) {
     return out.good();
 }
 
+static const std::string_view BMP_SIG = "BM"sv;
+
 Image LoadBMP(const Path& file) {
     std::ifstream ifs(file, std::ios::binary);
     if (!ifs) {
@@ -84,8 +87,15 @@ Image LoadBMP(const Path& file) {
         return {};
     }
 
-    const int skip = sizeof(BitmapFileHeader) + sizeof(std::uint32_t);
-    ifs.seekg(skip, std::ios::beg);
+    std::array<char, 2> sign;
+    ifs.read(reinterpret_cast<char*>(&sign[0]), sizeof(char));
+    ifs.read(reinterpret_cast<char*>(&sign[1]), sizeof(char));
+
+    if (sign[0] != BMP_SIG[0] || sign[1] != BMP_SIG[1]) {
+        return {};
+    }
+
+    ifs.seekg(sizeof(BitmapFileHeader) - sizeof(std::array<char, 2>) + sizeof(std::uint32_t), std::ios::cur);
 
     int w = 0, h = 0;
     ifs.read(reinterpret_cast<char*>(&w), sizeof(w));
