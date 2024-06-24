@@ -14,12 +14,12 @@ PACKED_STRUCT_BEGIN BitmapFileHeader {
     std::array<char, 2> sign = { 'B', 'M' };
     std::uint32_t total_size = {};
     std::uint32_t reserved_space = 0;
-    std::uint32_t header_padding = 54;
+    std::uint32_t header_padding = {};
 }
 PACKED_STRUCT_END
 
 PACKED_STRUCT_BEGIN BitmapInfoHeader {
-    std::uint32_t info_header_size = 40;
+    std::uint32_t info_header_size = sizeof(*this);
     std::int32_t image_width = {};
     std::int32_t image_height = {};
     std::uint16_t flat_num = 1;
@@ -49,6 +49,7 @@ bool SaveBMP(const Path& file, const Image& image) {
     const int step = GetBMPStride(w);
 
     BitmapFileHeader bitmap_file_header;
+    bitmap_file_header.header_padding = sizeof(BitmapFileHeader) + sizeof(BitmapInfoHeader);
     bitmap_file_header.total_size = bitmap_file_header.header_padding + step * h;
 
     BitmapInfoHeader bitmap_info_header;

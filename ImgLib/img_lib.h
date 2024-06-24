@@ -7,63 +7,54 @@
 
 namespace img_lib {
 
-struct Size {
-    int width;
-    int height;
-};
+    struct Size {
+        int width;
+        int height;
+    };
 
-struct Color {
-    static Color Black() {
-        return {std::byte{0}, std::byte{0}, std::byte{0}, std::byte{255}};
-    }
+    struct Color {
+        static Color Black() {
+            return { std::byte{0}, std::byte{0}, std::byte{0}, std::byte{255} };
+        }
 
-    std::byte r, g, b, a;
-};
+        std::byte r, g, b, a;
+    };
 
-class Image {
-public:
-    // создаёт пустое изображение
-    Image() = default;
+    class Image {
+    public:
+        Image() = default;
+        Image(int w, int h, Color fill);
 
-    // создаёт изображение заданного размера, заполняя его заданным цветом
-    Image(int w, int h, Color fill);
+        Color GetPixel(int x, int y) const {
+            return const_cast<Image*>(this)->GetPixel(x, y);
+        }
 
-    // геттеры для отдельного пикселя изображения
-    Color GetPixel(int x, int y) const {
-        return const_cast<Image*>(this)->GetPixel(x, y);
-    }
-    Color& GetPixel(int x, int y) {
-        assert(x < GetWidth() && y < GetHeight() && x >= 0 && y >= 0);
-        return GetLine(y)[x];
-    }
+        Color& GetPixel(int x, int y) {
+            assert(x < GetWidth() && y < GetHeight() && x >= 0 && y >= 0);
+            return GetLine(y)[x];
+        }
 
-    // геттер для заданной строки изображения
-    Color* GetLine(int y);
-    const Color* GetLine(int y) const;
+        Color* GetLine(int y);
+        const Color* GetLine(int y) const;
 
-    int GetWidth() const;
-    int GetHeight() const;
+        int GetWidth() const;
+        int GetHeight() const;
+        int GetStep() const;
 
-    // шаг задаёт смещение соседних строк изображения
-    // он обычно совпадает с шириной, но может быть больше неё
-    int GetStep() const;
+        explicit operator bool() const {
+            return GetWidth() > 0 && GetHeight() > 0;
+        }
 
-    // будем считать изображение корректным, если
-    // его площадь положительна
-    explicit operator bool() const {
-        return GetWidth() > 0 && GetHeight() > 0;
-    }
+        bool operator!() const {
+            return !operator bool();
+        }
 
-    bool operator!() const {
-        return !operator bool();
-    }
+    private:
+        int width_ = 0;
+        int height_ = 0;
+        int step_;
 
-private:
-    int width_ = 0;
-    int height_ = 0;
-    int step_;
+        std::vector<Color> pixels_;
+    };
 
-    std::vector<Color> pixels_;
-};
-
-}  // namespace img_lib
+} // namespace img_lib
