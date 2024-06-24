@@ -100,6 +100,7 @@ public:
 
     ImageFormatInterfaceRAII& operator=(ImageFormatInterfaceRAII&& other) noexcept {
         if (this != &other) {
+            delete this->format_interface;
             this->format_interface = std::exchange(other.format_interface, nullptr);
         }
 
@@ -112,6 +113,7 @@ public:
 
     ImageFormatInterfaceRAII& operator=(ImageFormatInterface* other) noexcept {
         if (this->format_interface != other) {
+            delete this->format_interface;
             this->format_interface = std::exchange(other, nullptr);
         }
 
