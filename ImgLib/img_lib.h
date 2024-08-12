@@ -6,13 +6,12 @@
 #include <vector>
 
 namespace img_lib {
-
-    struct Size {
+    struct Size final {
         int width;
         int height;
     };
 
-    struct Color {
+    struct Color final {
         static Color Black() {
             return { std::byte{0}, std::byte{0}, std::byte{0}, std::byte{255} };
         }
@@ -20,7 +19,7 @@ namespace img_lib {
         std::byte r, g, b, a;
     };
 
-    class Image {
+    class Image final {
     public:
         Image() = default;
         Image(int w, int h, Color fill);
@@ -56,5 +55,4 @@ namespace img_lib {
 
         std::vector<Color> pixels_;
     };
-
 } // namespace img_lib

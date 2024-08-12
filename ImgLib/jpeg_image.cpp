@@ -7,8 +7,7 @@
 #include "ppm_image.h"
 
 namespace img_lib {
-
-    struct my_error_mgr {
+    struct my_error_mgr final {
         struct jpeg_error_mgr pub;
         jmp_buf setjmp_buffer;
     };
@@ -76,7 +75,7 @@ namespace img_lib {
 
         jpeg_destroy_compress(&cinfo);
         return true;
-        }
+    }
 
     void SaveSсanlineToImage(const JSAMPLE* row, int y, Image& out_image) {
         Color* line = out_image.GetLine(y);
@@ -142,6 +141,5 @@ namespace img_lib {
         fclose(infile);
 
         return result;
-        }
-
-    } // namespace img_lib
+    }
+} // namespace img_lib

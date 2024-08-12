@@ -8,5 +8,4 @@ namespace img_lib {
 
 	bool SaveJPEG(const Path& file, const Image& image);
 	Image LoadJPEG(const Path& file);
-
 } // namespace img_lib

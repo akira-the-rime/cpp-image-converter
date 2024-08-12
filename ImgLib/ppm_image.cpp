@@ -70,5 +70,4 @@ namespace img_lib {
 
         return result;
     }
-
 } // namespace img_lib

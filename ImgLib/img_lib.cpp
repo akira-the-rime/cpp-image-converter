@@ -1,7 +1,6 @@
 #include "img_lib.h"
 
 namespace img_lib {
-
     Image::Image(int w, int h, Color fill)
         : width_(w)
         , height_(h)
@@ -29,5 +28,4 @@ namespace img_lib {
     int Image::GetStep() const {
         return step_;
     }
-
 } // namespace img_lib

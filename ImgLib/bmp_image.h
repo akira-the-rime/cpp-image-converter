@@ -4,9 +4,8 @@
 #include "img_lib.h"
 
 namespace img_lib {
-using Path = std::filesystem::path;
+	using Path = std::filesystem::path;
 
-bool SaveBMP(const Path& file, const Image& image);
-Image LoadBMP(const Path& file);
-
+	bool SaveBMP(const Path& file, const Image& image);
+	Image LoadBMP(const Path& file);
 } // namespace img_lib

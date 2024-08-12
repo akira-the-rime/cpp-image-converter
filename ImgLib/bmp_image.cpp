@@ -34,90 +34,89 @@ PACKED_STRUCT_BEGIN BitmapInfoHeader {
 }
 PACKED_STRUCT_END
 
-static int GetBMPStride(int w) {
-    return 4 * ((w * 3 + 3) / 4);
-}
-
-bool SaveBMP(const Path& file, const Image& image) {
-    std::ofstream out(file, std::ios::binary);
-    if (!out) {
-        std::cerr << "Output file was not opened" << std::endl;
-        return false;
+    static int GetBMPStride(int w) {
+        return 4 * ((w * 3 + 3) / 4);
     }
 
-    const int w = image.GetWidth();
-    const int h = image.GetHeight();
-    const int step = GetBMPStride(w);
+    bool SaveBMP(const Path& file, const Image& image) {
+        std::ofstream out(file, std::ios::binary);
+        if (!out) {
+            std::cerr << "Output file was not opened" << std::endl;
+            return false;
+        }
 
-    BitmapFileHeader bitmap_file_header;
-    bitmap_file_header.header_padding = sizeof(BitmapFileHeader) + sizeof(BitmapInfoHeader);
-    bitmap_file_header.total_size = bitmap_file_header.header_padding + step * h;
+        const int w = image.GetWidth();
+        const int h = image.GetHeight();
+        const int step = GetBMPStride(w);
 
-    BitmapInfoHeader bitmap_info_header;
-    bitmap_info_header.image_width = w;
-    bitmap_info_header.image_height = h;
-    bitmap_info_header.image_size = step * h;
+        BitmapFileHeader bitmap_file_header;
+        bitmap_file_header.header_padding = sizeof(BitmapFileHeader) + sizeof(BitmapInfoHeader);
+        bitmap_file_header.total_size = bitmap_file_header.header_padding + step * h;
 
-    out.write(reinterpret_cast<const char*>(&bitmap_file_header), sizeof(bitmap_file_header));
-    out.write(reinterpret_cast<const char*>(&bitmap_info_header), sizeof(bitmap_info_header));
+        BitmapInfoHeader bitmap_info_header;
+        bitmap_info_header.image_width = w;
+        bitmap_info_header.image_height = h;
+        bitmap_info_header.image_size = step * h;
 
-    std::vector<char> buff(step, 0);
+        out.write(reinterpret_cast<const char*>(&bitmap_file_header), sizeof(bitmap_file_header));
+        out.write(reinterpret_cast<const char*>(&bitmap_info_header), sizeof(bitmap_info_header));
 
-    for (int y = h - 1; y >= 0; --y) {
+        std::vector<char> buff(step, 0);
+
+        for (int y = h - 1; y >= 0; --y) {
         const Color* line = image.GetLine(y);
 
-        for (int x = 0; x < w; ++x) {
-            buff[x * 3 + 0] = static_cast<char>(line[x].b);
-            buff[x * 3 + 1] = static_cast<char>(line[x].g);
-            buff[x * 3 + 2] = static_cast<char>(line[x].r);
+            for (int x = 0; x < w; ++x) {
+                buff[x * 3 + 0] = static_cast<char>(line[x].b);
+                buff[x * 3 + 1] = static_cast<char>(line[x].g);
+                buff[x * 3 + 2] = static_cast<char>(line[x].r);
+            }
+
+            out.write(reinterpret_cast<const char*>(buff.data()), buff.size());
         }
 
-        out.write(reinterpret_cast<const char*>(buff.data()), buff.size());
+        return out.good();
     }
 
-    return out.good();
-}
+    static const std::string_view BMP_SIG = "BM"sv;
 
-static const std::string_view BMP_SIG = "BM"sv;
-
-Image LoadBMP(const Path& file) {
-    std::ifstream ifs(file, std::ios::binary);
-    if (!ifs) {
-        std::cerr << "Input file was not opened" << std::endl;
-        return {};
-    }
-
-    std::array<char, 2> sign;
-    ifs.read(reinterpret_cast<char*>(&sign[0]), sizeof(char));
-    ifs.read(reinterpret_cast<char*>(&sign[1]), sizeof(char));
-
-    if (sign[0] != BMP_SIG[0] || sign[1] != BMP_SIG[1]) {
-        return {};
-    }
-
-    ifs.seekg(sizeof(BitmapFileHeader) - sizeof(std::array<char, 2>) + sizeof(std::uint32_t), std::ios::cur);
-
-    int w = 0, h = 0;
-    ifs.read(reinterpret_cast<char*>(&w), sizeof(w));
-    ifs.read(reinterpret_cast<char*>(&h), sizeof(h));
-    ifs.seekg(sizeof(BitmapInfoHeader) - sizeof(std::uint32_t) - sizeof(std::int32_t) - sizeof(std::int32_t), std::ios::cur);
-
-    Image result(w, h, Color::Black());
-    int step = GetBMPStride(w);
-
-    std::vector<char> buff(step);
-    for (int y = h - 1; y >= 0; --y) {
-        Color* line = result.GetLine(y);
-        ifs.read(buff.data(), step);
-
-        for (int x = 0; x < w; ++x) {
-            line[x].b = static_cast<std::byte>(buff[x * 3 + 0]);
-            line[x].g = static_cast<std::byte>(buff[x * 3 + 1]);
-            line[x].r = static_cast<std::byte>(buff[x * 3 + 2]);
+    Image LoadBMP(const Path& file) {
+        std::ifstream ifs(file, std::ios::binary);
+        if (!ifs) {
+            std::cerr << "Input file was not opened" << std::endl;
+            return {};
         }
+
+        std::array<char, 2> sign;
+        ifs.read(reinterpret_cast<char*>(&sign[0]), sizeof(char));
+        ifs.read(reinterpret_cast<char*>(&sign[1]), sizeof(char));
+
+        if (sign[0] != BMP_SIG[0] || sign[1] != BMP_SIG[1]) {
+            return {};
+        }
+
+        ifs.seekg(sizeof(BitmapFileHeader) - sizeof(std::array<char, 2>) + sizeof(std::uint32_t), std::ios::cur);
+
+        int w = 0, h = 0;
+        ifs.read(reinterpret_cast<char*>(&w), sizeof(w));
+        ifs.read(reinterpret_cast<char*>(&h), sizeof(h));
+        ifs.seekg(sizeof(BitmapInfoHeader) - sizeof(std::uint32_t) - sizeof(std::int32_t) - sizeof(std::int32_t), std::ios::cur);
+
+        Image result(w, h, Color::Black());
+        int step = GetBMPStride(w);
+
+        std::vector<char> buff(step);
+        for (int y = h - 1; y >= 0; --y) {
+            Color* line = result.GetLine(y);
+            ifs.read(buff.data(), step);
+
+            for (int x = 0; x < w; ++x) {
+                line[x].b = static_cast<std::byte>(buff[x * 3 + 0]);
+                line[x].g = static_cast<std::byte>(buff[x * 3 + 1]);
+                line[x].r = static_cast<std::byte>(buff[x * 3 + 2]);
+            }
+        }
+
+        return result;
     }
-
-    return result;
-}
-
 } // namespace img_lib
